@@ -45,3 +45,17 @@ urlpatterns = [
     path("log_view/", views.LogView.as_view(), name="log_view"),
     path("log_download/", views.LogDownloadView.as_view(), name="log_download"),
 ]
+
+from django.core import mail as django_mail
+
+from mainapp import tasks as mainapp_tasks
+
+
+class TestTaskMailSend(TestCase):
+    fixtures = ("authapp/fixtures/001_user_admin.json",)
+
+    def test_mail_send(self):
+        message_text = "test_message_text"
+        user_obj = authapp_models.CustomUser.objects.first()
+        mainapp_tasks.send_feedback_mail({"user_id": user_obj.id, "message": message_text})
+        self.assertEqual(django_mail.outbox[0].body, message_text)
